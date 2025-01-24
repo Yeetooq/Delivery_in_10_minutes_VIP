@@ -33,6 +33,13 @@
             font-size: 14px;
         }
 
+        #controls select {
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
         #controls button {
             padding: 1px 14px;
             border: none;
@@ -68,8 +75,11 @@
 <div id="map"></div>
 <div id="controls">
     <input type="text" id="addressInput" placeholder="Введите адрес">
-    <button id="findPedestrianButton">Пешком</button>
-    <button id="findCarButton">Авто</button>
+    <select id="routeType">
+        <option value="pedestrian">Пешком</option>
+        <option value="auto">Авто</option>
+    </select>
+    <button id="findRouteButton">Построить маршрут</button>
     <button id="autoButton">Показать зоны</button>
 </div>
 <div id="messageBox"></div>
@@ -378,19 +388,11 @@
         }
 
         // Обработка событий кнопок
-        document.getElementById('findPedestrianButton').addEventListener('click', function () {
+        document.getElementById('findRouteButton').addEventListener('click', function () {
             var address = document.getElementById('addressInput').value.trim();
             if (address) {
-                findNearestPoint(address, 'pedestrian'); // Пешеходный маршрут
-            } else {
-                showMessage("Введите адрес!");
-            }
-        });
-
-        document.getElementById('findCarButton').addEventListener('click', function () {
-            var address = document.getElementById('addressInput').value.trim();
-            if (address) {
-                findNearestPoint(address, 'auto'); // Автомобильный маршрут
+                var routeType = document.getElementById('routeType').value; // Получаем выбранный тип маршрута
+                findNearestPoint(address, routeType); // Передаём тип маршрута в функцию
             } else {
                 showMessage("Введите адрес!");
             }
