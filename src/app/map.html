@@ -33,13 +33,6 @@
             font-size: 14px;
         }
 
-        #controls select {
-            padding: 4px;
-            border: 1px solid #ccc;
-            border-radius: 7px;
-            font-size: 14px;
-        }
-
         #controls button {
             padding: 1px 14px;
             border: none;
@@ -75,12 +68,7 @@
 <div id="map"></div>
 <div id="controls">
     <input type="text" id="addressInput" placeholder="Введите адрес">
-    <select id="routeType">
-        <option value="pedestrian">Пешком</option>
-        <option value="auto">Авто</option>
-    </select>
     <button id="findRouteButton">Построить маршрут</button>
-    <button id="autoButton">Показать зоны</button>
 </div>
 <div id="messageBox"></div>
 
@@ -95,7 +83,6 @@
         });
 
         // Переменные для управления зонами, метками и маршрутом
-        var zonesAndMarkersVisible = false;
         var zones = [];
         var markers = [];
         var route = null; // Для хранения маршрута
@@ -298,27 +285,8 @@
             }, 5000);
         }
 
-        // Функция удаления зон и меток
-        function removeZonesAndMarkers() {
-            zones.forEach(zone => map.geoObjects.remove(zone));
-            zones = []; // Очищаем массив зон
-
-            markers.forEach(marker => map.geoObjects.remove(marker));
-            markers = []; // Очищаем массив меток
-        }
-
-        // Функция переключения видимости зон и меток
-        window.showZonesAndMarkers = function () {
-            if (!zonesAndMarkersVisible) {
-                addZonesAndMarkers();
-            } else {
-                removeZonesAndMarkers();
-            }
-            zonesAndMarkersVisible = !zonesAndMarkersVisible;
-        };
-
         // Функция построения маршрута
-        function drawRoute(startAddress, endAddress, routingMode) {
+        function drawRoute(startAddress, endAddress) {
             // Удаляем старый маршрут, если он существует
             if (route) {
                 map.geoObjects.remove(route);
@@ -346,11 +314,11 @@
                         return;
                     }
 
-                    // Создаем маршрут в зависимости от выбранного режима
+                    // Создаем маршрут в режиме "auto"
                     route = new ymaps.multiRouter.MultiRoute({
                         referencePoints: [startCoordinates, endCoordinates],
                         params: {
-                            routingMode: routingMode // 'auto' или 'pedestrian'
+                            routingMode: 'auto' // Всегда используем режим "auto"
                         }
                     }, {
                         boundsAutoApply: true
@@ -363,7 +331,7 @@
         }
 
         // Определение ближайшей точки
-        function findNearestPoint(address, routingMode) {
+        function findNearestPoint(address) {
             fetch('addresses.txt')
                 .then(response => response.text())
                 .then(data => {
@@ -381,7 +349,7 @@
                                 return currDistance < prevDistance ? curr : prev;
                             });
 
-                            drawRoute(address, nearest.address, routingMode);
+                            drawRoute(address, nearest.address);
                         });
                     });
                 }).catch(err => console.error("Ошибка загрузки адресов:", err));
@@ -391,16 +359,14 @@
         document.getElementById('findRouteButton').addEventListener('click', function () {
             var address = document.getElementById('addressInput').value.trim();
             if (address) {
-                var routeType = document.getElementById('routeType').value; // Получаем выбранный тип маршрута
-                findNearestPoint(address, routeType); // Передаём тип маршрута в функцию
+                findNearestPoint(address);
             } else {
                 showMessage("Введите адрес!");
             }
         });
 
-        document.getElementById('autoButton').addEventListener('click', function () {
-            showZonesAndMarkers();
-        });
+        // Добавляем зоны и метки сразу при инициализации карты
+        addZonesAndMarkers();
     }
 </script>
 </body>
