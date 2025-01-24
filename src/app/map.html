@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Яндекс Карта</title>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=f2206a66-2fdf-432e-b948-9b64ddffc204&lang=ru_RU" type="text/javascript"></script>
+    <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        #controls input {
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        #controls select {
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        #controls button {
+            padding: 1px 14px;
+            border: none;
+            border-radius: 7px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        #controls button:hover {
+            background: #0056b3;
+        }
+
+        #messageBox {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(50, 50, 50, 0.9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="controls">
+    <input type="text" id="addressInput" placeholder="Введите адрес">
+    <select id="routeType">
+        <option value="pedestrian">Пешком</option>
+        <option value="auto">Авто</option>
+    </select>
+    <button id="findRouteButton">Построить маршрут</button>
+    <button id="autoButton">Показать зоны</button>
+</div>
+<div id="messageBox"></div>
+
+<script>
+    ymaps.ready(init);
+
+    function init() {
+        var map = new ymaps.Map("map", {
+            center: [55.989008, 37.206851], // Центр Зеленограда
+            zoom: 12,
+            controls: ['zoomControl']
+        });
+
+        // Переменные для управления зонами, метками и маршрутом
+        var zonesAndMarkersVisible = false;
+        var zones = [];
+        var markers = [];
+        var route = null; // Для хранения маршрута
+
+        // Координаты зон
+        var PolygonCoords_1 = [
+            [
+                [55.986059, 37.145367],
+                [55.9880, 37.1600],
+                [55.987087, 37.181235],
+                [55.985102, 37.197346],
+                [55.9870, 37.2050],
+                [55.994409, 37.212386],
+                [56.0000, 37.2200],
+                [56.008386, 37.224401],
+                [56.022045370945136, 37.18945606916135],
+                [56.01743212881071, 37.18095926455474],
+                [56.01403968729237, 37.15813927475718],
+                [56.01688935809045, 37.1595958698326],
+                [56.01777135644241, 37.14502991907841],
+                [56.01655012259173, 37.13143503170783],
+                [55.999516671032104, 37.15024938476533],
+                [55.99791869482851, 37.149481785073576],
+                [55.99323468249161, 37.15239497522442],
+                [55.9900170483287, 37.144706785618226],
+            ]
+        ];
+
+        var PolygonCoords_2 = [
+            [
+                [55.977979, 37.145796],
+                [55.9765, 37.1600],
+                [55.9750, 37.1800],
+                [55.977471, 37.196796],
+                [55.978978, 37.208821],
+                [55.97825814287892, 37.21357624626845],
+                [55.975090, 37.211274],
+                [55.972679, 37.210788],
+                [55.971117, 37.208118],
+                [55.970437, 37.209423],
+                [55.969724, 37.208907],
+                [55.970013, 37.207390],
+                [55.968196, 37.208907],
+                [55.965886, 37.208664],
+                [55.965580, 37.209605],
+                [55.961640, 37.205903],
+                [55.959755, 37.209297],
+                [55.956752, 37.210627],
+                [55.955190, 37.218309],
+                [55.954157, 37.217837],
+                [55.953556, 37.219382],
+                [55.951442, 37.218008],
+                [55.958241, 37.186938],
+                [55.963022, 37.182861],
+                [55.962517, 37.178183],
+                [55.960667, 37.178483],
+                [55.960788, 37.180758],
+                [55.960091, 37.181316],
+                [55.960187, 37.182732],
+                [55.957544, 37.185393],
+                [55.958794, 37.182560],
+                [55.958818, 37.177711],
+                [55.957953, 37.172518],
+                [55.959298, 37.173634],
+                [55.959947, 37.173419],
+                [55.960836, 37.168699],
+                [55.958866, 37.168956],
+                [55.959154, 37.167454],
+                [55.958577, 37.167154],
+                [55.960007, 37.161969],
+                [55.961842, 37.160938],
+                [55.962521, 37.159420],
+                [55.961978, 37.159360],
+                [55.961502, 37.150135],
+                [55.960517, 37.149164],
+                [55.961910, 37.147889],
+                [55.962861, 37.145643],
+                [55.964526, 37.147403],
+                [55.966122, 37.146493],
+                [55.966492, 37.145917],
+                [55.967179, 37.146206],
+                [55.969688, 37.146341]
+            ]
+        ];
+
+        var PolygonCoords_3 = [
+            [
+                [55.975947, 37.216722],
+                [55.976922, 37.212559],
+                [55.978249, 37.213601],
+                [55.978978, 37.208821],
+                [55.983547, 37.212784],
+                [55.9860, 37.2150],
+                [55.9920, 37.2250],
+                [55.9980, 37.2300],
+                [55.9920, 37.2250],
+                [55.9980, 37.2300],
+                [56.006188, 37.229380],
+                [56.001221486649975, 37.24082710261867],
+                [55.993427, 37.260880],
+                [55.988602, 37.254756],
+                [55.987489, 37.256083],
+                [55.988659, 37.263074],
+                [55.987261, 37.264248],
+                [55.983321, 37.263534],
+                [55.981465, 37.269096],
+                [55.980323, 37.271342],
+                [55.975897, 37.269096],
+                [55.974926, 37.272669],
+                [55.972384, 37.269607],
+                [55.972527, 37.261594],
+                [55.967872, 37.258940],
+                [55.968757, 37.253173],
+                [55.971305, 37.254631],
+                [55.972054, 37.251778],
+                [55.973015, 37.252636],
+                [55.974504, 37.251692],
+                [55.979090, 37.242122],
+                [55.981726, 37.224964],
+                [55.981343, 37.219912],
+                [55.977930, 37.216881],
+                [55.977433, 37.218375]
+            ]
+        ];
+
+        var PolygonCoords_4 = [
+            [
+                [55.986059, 37.145367],
+                [55.9880, 37.1600],
+                [55.987087, 37.181235],
+                [55.985102, 37.197346],
+                [55.9870, 37.2050],
+                [55.994409, 37.212386],
+                [56.0000, 37.2200],
+                [56.008386, 37.224401],
+                [56.006188, 37.229380],
+                [55.9980, 37.2300],
+                [55.9920, 37.2250],
+                [55.9860, 37.2150],
+                [55.983547, 37.212784],
+                [55.978978, 37.208821],
+                [55.977471, 37.196796],
+                [55.9750, 37.1800],
+                [55.9765, 37.1600],
+                [55.977979, 37.145796],
+                [55.983527, 37.145717]
+            ]
+        ];
+
+        // Функция добавления зон и меток
+        function addZonesAndMarkers() {
+            zones.push(new ymaps.Polygon(PolygonCoords_1, { hintContent: "1 зона доставки" }, { fillColor: '#00FF0013', strokeColor: '#00FF0080', strokeWidth: 2 }));
+            zones.push(new ymaps.Polygon(PolygonCoords_2, { hintContent: "2 зона доставки" }, { fillColor: '#00FF0013', strokeColor: '#00FF0080', strokeWidth: 2 }));
+            zones.push(new ymaps.Polygon(PolygonCoords_3, { hintContent: "3 зона доставки" }, { fillColor: '#00FF0013', strokeColor: '#00FF0080', strokeWidth: 2 }));
+            zones.push(new ymaps.Polygon(PolygonCoords_4, { hintContent: "пересечение зон доставки" }, { fillColor: '#FFA50025', strokeColor: '#FFA50080', strokeWidth: 2 }));
+            zones.forEach(zone => map.geoObjects.add(zone));
+
+            // Загружаем и добавляем метки
+            fetch('addresses.txt')
+                .then(response => response.text())
+                .then(data => {
+                    var addresses = data.split('\n');
+                    addresses.forEach(address => {
+                        if (address.trim()) {
+                            ymaps.geocode(address.trim()).then(function (res) {
+                                var firstGeoObject = res.geoObjects.get(0);
+                                if (firstGeoObject) {
+                                    var coordinates = firstGeoObject.geometry.getCoordinates();
+                                    var placemark = new ymaps.Placemark(coordinates, {
+                                        balloonContent: address
+                                    }, {
+                                        iconLayout: 'default#image',
+                                        iconImageHref: 'or_food.png',
+                                        iconImageSize: [25, 30],
+                                        iconImageOffset: [-20, -20]
+                                    });
+                                    markers.push(placemark);
+                                    map.geoObjects.add(placemark);
+                                }
+                            }).catch(err => console.error("Ошибка геокодирования адреса:", address, err));
+                        }
+                    });
+                })
+                .catch(err => console.error("Ошибка загрузки файла addresses.txt:", err));
+        }
+
+        function showMessage(text) {
+            var messageBox = document.getElementById("messageBox");
+            messageBox.textContent = text;
+            messageBox.style.display = "block";
+            messageBox.style.opacity = "1"; // Появление
+
+            // Убираем через 5 секунд с анимацией
+            setTimeout(() => {
+                messageBox.style.transition = "opacity 0.5s";
+                messageBox.style.opacity = "0"; // Исчезновение
+                setTimeout(() => {
+                    messageBox.style.display = "none"; // Полное скрытие
+                }, 500); // Учитываем длительность анимации
+            }, 5000);
+        }
+
+        // Функция удаления зон и меток
+        function removeZonesAndMarkers() {
+            zones.forEach(zone => map.geoObjects.remove(zone));
+            zones = []; // Очищаем массив зон
+
+            markers.forEach(marker => map.geoObjects.remove(marker));
+            markers = []; // Очищаем массив меток
+        }
+
+        // Функция переключения видимости зон и меток
+        window.showZonesAndMarkers = function () {
+            if (!zonesAndMarkersVisible) {
+                addZonesAndMarkers();
+            } else {
+                removeZonesAndMarkers();
+            }
+            zonesAndMarkersVisible = !zonesAndMarkersVisible;
+        };
+
+        // Функция построения маршрута
+        function drawRoute(startAddress, endAddress, routingMode) {
+            // Удаляем старый маршрут, если он существует
+            if (route) {
+                map.geoObjects.remove(route);
+            }
+
+            // Получаем координаты начального и конечного адреса
+            ymaps.geocode(endAddress).then(function (res) {
+                var startCoordinates = res.geoObjects.get(0).geometry.getCoordinates();
+
+                ymaps.geocode(startAddress).then(function (res) {
+                    var endCoordinates = res.geoObjects.get(0).geometry.getCoordinates();
+
+                    // Проверяем, находятся ли начальная и конечная точки в пределах зон
+                    var isStartInsideZone = zones.some(function (zone) {
+                        return zone.geometry.contains(startCoordinates);
+                    });
+
+                    var isEndInsideZone = zones.some(function (zone) {
+                        return zone.geometry.contains(endCoordinates);
+                    });
+
+                    // Если хотя бы одна точка не находится в пределах зоны, показываем ошибку
+                    if (!isStartInsideZone || !isEndInsideZone) {
+                        showMessage("Доставка осуществляется только в пределах Зеленограда!");
+                        return;
+                    }
+
+                    // Создаем маршрут в зависимости от выбранного режима
+                    route = new ymaps.multiRouter.MultiRoute({
+                        referencePoints: [startCoordinates, endCoordinates],
+                        params: {
+                            routingMode: routingMode // 'auto' или 'pedestrian'
+                        }
+                    }, {
+                        boundsAutoApply: true
+                    });
+
+                    // Добавляем маршрут на карту
+                    map.geoObjects.add(route);
+                });
+            });
+        }
+
+        // Определение ближайшей точки
+        function findNearestPoint(address, routingMode) {
+            fetch('addresses.txt')
+                .then(response => response.text())
+                .then(data => {
+                    var addresses = data.split('\n');
+                    var promises = addresses.map(a => ymaps.geocode(a.trim()).then(res => {
+                        return { address: a, coords: res.geoObjects.get(0).geometry.getCoordinates() };
+                    }));
+
+                    Promise.all(promises).then(results => {
+                        ymaps.geocode(address).then(res => {
+                            var userCoords = res.geoObjects.get(0).geometry.getCoordinates();
+                            var nearest = results.reduce((prev, curr) => {
+                                var prevDistance = ymaps.coordSystem.geo.getDistance(userCoords, prev.coords);
+                                var currDistance = ymaps.coordSystem.geo.getDistance(userCoords, curr.coords);
+                                return currDistance < prevDistance ? curr : prev;
+                            });
+
+                            drawRoute(address, nearest.address, routingMode);
+                        });
+                    });
+                }).catch(err => console.error("Ошибка загрузки адресов:", err));
+        }
+
+        // Обработка событий кнопок
+        document.getElementById('findRouteButton').addEventListener('click', function () {
+            var address = document.getElementById('addressInput').value.trim();
+            if (address) {
+                var routeType = document.getElementById('routeType').value; // Получаем выбранный тип маршрута
+                findNearestPoint(address, routeType); // Передаём тип маршрута в функцию
+            } else {
+                showMessage("Введите адрес!");
+            }
+        });
+
+        document.getElementById('autoButton').addEventListener('click', function () {
+            showZonesAndMarkers();
+        });
+    }
+</script>
+</body>
+</html>
