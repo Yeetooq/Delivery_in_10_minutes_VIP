@@ -40,7 +40,7 @@
             padding: 1px 6px;
             border: none;
             border-radius: 7px;
-            background: #007bff;
+            background: #1E90FF;
             color: white;
             cursor: pointer;
             font-size: 11.5px;
@@ -50,6 +50,15 @@
 
         #controls button:hover {
             background: #0056b3;
+        }
+
+        #controls select {
+            padding: 1px 6px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 11.5px;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 500;
         }
 
         #messageBox {
@@ -72,13 +81,14 @@
         #legend {
             position: fixed;
             bottom: 85px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 5px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             font-family: 'Inter', sans-serif !important;
-            font-size: 11.5px;
+            font-size: 10.5px;
+            font-weight: 500;
             z-index: 1000;
         }
 
@@ -104,54 +114,20 @@
             background-color: #FF450013;
             border: 1px solid #FF450080;
         }
-        /* Стили для значка "!" */
-        #infoIcon {
-            position: fixed;
-            top: 20px;
-            left: 10px;
-            background-color: rgba(255, 255, 255, 0.9);
-            color: black;
-            font-family: 'Georgia', sans-serif;
-            font-weight: bold;
-            font-size: 18px;
-            text-align: center;
-            padding: 2.5px 7px;
-            border-radius: 10px;
-            cursor: pointer;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Тень */
-            border: 1px solid rgba(0, 0, 0, 0.1); /* Легкая оконтовка */
-            z-index: 1001;
-        }
-
-
-        #infoIcon:hover {
-            background-color: rgba(255, 255, 255, 0.9);
-        }
-
-        /* Стили для всплывающего сообщения */
-        #infoPopup {
-            position: fixed;
-            top: 22px;
-            left: 40px; /* Справа от восклицательного знака */
-            background: rgba(50, 50, 50, 0.9);
-            color: white;
-            padding: 6px 10px;
-            border-radius: 10px;
-            font-size: 11.5px;
-            font-family: 'Inter', sans-serif !important;
-            display: none;
-            white-space: nowrap;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-        }
     </style>
 </head>
 <body>
 <div id="map"></div>
 <div id="controls">
     <input type="text" id="addressInput" placeholder="Введите адрес">
+    <select id="routeType">
+        <option value="pedestrian">Пешком</option>
+        <option value="auto">Авто</option>
+    </select>
     <button id="findRouteButton">Построить маршрут</button>
     <button id="autoButton">Отображение зон</button>
+    <button id="voice-assistant-btn" style="background-color: #4CAF50; color: white;">🎤 turn on the voice assistant</button>
+
 </div>
 <div id="messageBox"></div>
 <div id="legend">
@@ -164,17 +140,12 @@
         <span>Зона пересечения лавок</span>
     </div>
 </div>
-<!-- Значок "!" -->
-<div id="infoIcon">!</div>
-
-<!-- Всплывающее сообщение -->
-<div id="infoPopup">Для построения маршрута нужно отобразить зоны</div>
 <script>
     ymaps.ready(init);
 
     function init() {
         var map = new ymaps.Map("map", {
-            center: [55.989008, 37.206851], // Центр Зеленограда
+            center: [55.978746, 37.204738], // Центр Зеленограда
             zoom: 12,
             controls: ['zoomControl']
         });
@@ -733,7 +704,7 @@
             zones.push(new ymaps.Polygon(PolygonCoords_peresecheniya, { hintContent: "пересечение зон доставки" }, { fillColor: '#FF450013', strokeColor: '#FF450080', strokeWidth: 1.7 }));
             zones.forEach(zone => map.geoObjects.add(zone));
 
-            fetch('addresses.txt')
+            fetch('../data/addresses.txt')
                 .then(response => response.text())
                 .then(data => {
                     var addresses = data.split('\n');
@@ -744,10 +715,7 @@
                                 if (firstGeoObject) {
                                     var coordinates = firstGeoObject.geometry.getCoordinates();
                                     var placemark = new ymaps.Placemark(coordinates, { balloonContent: address }, {
-                                        iconLayout: 'default#image',
-                                        iconImageHref: 'or_food.png',
-                                        iconImageSize: [25, 30],
-                                        iconImageOffset: [-13, -26]
+                                        preset: 'islands#orangeDotIcon'
                                     });
                                     markers.push(placemark);
                                     map.geoObjects.add(placemark);
@@ -771,7 +739,7 @@
                 setTimeout(() => {
                     messageBox.style.display = "none";
                 }, 1000);
-            }, 2000);
+            }, 2500);
         }
 
         function removeZonesAndMarkers() {
@@ -804,7 +772,7 @@
             popup.style.position = "fixed";
             popup.style.top = "20px";
             popup.style.right = "20px";
-            popup.style.padding = "9px 12px";
+            popup.style.padding = "9px 10px";
             popup.style.background = "rgba(50, 50, 50, 0.9)";
             popup.style.color = "#fff";
             popup.style.borderRadius = "10px";
@@ -837,16 +805,31 @@
             // Добавляем всплывающее окно на страницу
             document.body.appendChild(popup);
         }
-        function drawRoute(startAddress, endAddress) {
+        function drawRoute(startAddress, endAddress, routingMode) {
             if (route) {
                 map.geoObjects.remove(route);
             }
 
-            ymaps.geocode(endAddress).then(function (res) {
-                var startCoordinates = res.geoObjects.get(0).geometry.getCoordinates();
+            if (!zones || zones.length === 0) {
+                showMessage("Для построения маршрута нажмите 'Отображение зон'");
+                return;
+            }
 
-                ymaps.geocode(startAddress).then(function (res) {
-                    var endCoordinates = res.geoObjects.get(0).geometry.getCoordinates();
+            ymaps.geocode(startAddress).then(function (resStart) {
+                if (!resStart.geoObjects.getLength()) {
+                    showMessage("Не удалось найти начальный адрес.");
+                    return;
+                }
+
+                var startCoordinates = resStart.geoObjects.get(0).geometry.getCoordinates();
+
+                ymaps.geocode(endAddress).then(function (resEnd) {
+                    if (!resEnd.geoObjects.getLength()) {
+                        showMessage("Не удалось найти конечный адрес.");
+                        return;
+                    }
+
+                    var endCoordinates = resEnd.geoObjects.get(0).geometry.getCoordinates();
 
                     var isStartInsideZone = zones.some(zone => zone.geometry.contains(startCoordinates));
                     var isEndInsideZone = zones.some(zone => zone.geometry.contains(endCoordinates));
@@ -856,28 +839,49 @@
                         return;
                     }
 
+                    // Создаем маршрут в зависимости от выбранного режима
                     route = new ymaps.multiRouter.MultiRoute({
                         referencePoints: [startCoordinates, endCoordinates],
-                        params: { routingMode: 'auto' }
+                        params: {
+                            routingMode: routingMode // 'auto' или 'pedestrian'
+                        }
                     }, {
                         boundsAutoApply: true
                     });
 
-                    // Обработчик для получения времени маршрута
-                    route.model.events.add('requestsuccess', function() {
+                    route.model.events.add('requestsuccess', function () {
                         var routes = route.getRoutes();
 
-                        routes.each(function(route) {
-                            var time = route.properties.get("duration").text;
-                            var distance = route.properties.get("distance").text;
+                        if (routes.getLength() === 0) {
+                            showMessage("Не удалось построить маршрут.");
+                            return;
+                        }
 
-                            var message = `🚗 Время в пути: ${time}<br>📍 Расстояние: ${distance}`;
-                            showPopupMessage(message);
+                        var minTime = Infinity;
+                        var minDistance = Infinity;
+                        var bestRoute = null;
+
+                        routes.each(function (routeItem) {
+                            var time = routeItem.properties.get("duration").value;
+                            var distance = routeItem.properties.get("distance").value;
+
+                            if (time < minTime) {
+                                minTime = time;
+                                minDistance = distance;
+                                bestRoute = routeItem;
+                            }
                         });
-                    });;
+
+                        if (bestRoute) {
+                            var timeText = bestRoute.properties.get("duration").text;
+                            var distanceText = bestRoute.properties.get("distance").text;
+
+                            var message = `🚗 Время в пути: ${timeText}<br>📍 Расстояние: ${distanceText}`;
+                            showPopupMessage(message);
+                        }
+                    });
 
 
-                    // Обработчик ошибок
                     route.model.events.add('requesterror', function (err) {
                         console.error("Ошибка при построении маршрута:", err);
                         showMessage("Ошибка при построении маршрута.");
@@ -885,17 +889,20 @@
 
                     map.geoObjects.add(route);
                 }).catch(err => {
-                    console.error("Ошибка геокодирования начального адреса:", err);
-                    showMessage("Ошибка при обработке адреса.");
+                    console.error("Ошибка геокодирования конечного адреса:", err);
+                    showMessage("Ошибка при обработке конечного адреса.");
                 });
             }).catch(err => {
-                console.error("Ошибка геокодирования конечного адреса:", err);
-                showMessage("Ошибка при обработке адреса.");
+                console.error("Ошибка геокодирования начального адреса:", err);
+                showMessage("Ошибка при обработке начального адреса.");
             });
         }
 
-        function findNearestPoint(address) {
-            fetch('addresses.txt')
+
+
+        // Определение ближайшей точки
+        function findNearestPoint(address, routingMode) {
+            fetch('../data/addresses.txt')
                 .then(response => response.text())
                 .then(data => {
                     var addresses = data.split('\n');
@@ -912,16 +919,18 @@
                                 return currDistance < prevDistance ? curr : prev;
                             });
 
-                            drawRoute(address, nearest.address);
+                            drawRoute(address, nearest.address, routingMode);
                         });
                     });
                 }).catch(err => console.error("Ошибка загрузки адресов:", err));
         }
 
+        // Обработка событий кнопок
         document.getElementById('findRouteButton').addEventListener('click', function () {
             var address = document.getElementById('addressInput').value.trim();
             if (address) {
-                findNearestPoint(address);
+                var routeType = document.getElementById('routeType').value; // Получаем выбранный тип маршрута
+                findNearestPoint(address, routeType); // Передаём тип маршрута в функцию
             } else {
                 showMessage("Введите адрес!");
             }
@@ -930,16 +939,66 @@
         document.getElementById('autoButton').addEventListener('click', function () {
             showZonesAndMarkers();
         });
-        // Логика значка "!"
-        var infoIcon = document.getElementById("infoIcon");
-        var infoPopup = document.getElementById("infoPopup");
-
-        infoIcon.addEventListener("click", function () {
-            infoPopup.style.display = (infoPopup.style.display === "block") ? "none" : "block";
-        });
-
-
     }
+    window.handleVoiceCommand = function(command) {
+    if (!command) return;
+
+    let data;
+    try {
+        data = JSON.parse(command);
+    } catch (e) {
+        data = null;
+    }
+
+    // === Если прилетел JSON от Python ===
+    if (data) {
+        if (data.action === "zones") {
+            showZonesAndMarkers();
+            showPopupMessage("Зоны доставки переключены");
+            return;
+        }
+
+        if (data.action === "route") {
+            let text = data.address;
+            let routingMode = data.mode || "auto";
+
+            // Проставим в input
+            var addrInput = document.getElementById('addressInput');
+            if (addrInput) addrInput.value = text;
+
+            // Проставим select
+            var routeTypeSelect = document.getElementById('routeType');
+            if (routeTypeSelect) routeTypeSelect.value = routingMode;
+
+            // Строим маршрут
+            findNearestPoint(text, routingMode);
+            return;
+        }
+    }
+
+    // Если ничего не подошло
+    showPopupMessage("Команда не распознана: " + command);
+};
+
+
+    let assistantOn = false;
+    const btn = document.getElementById('voice-assistant-btn');
+
+    btn.addEventListener('click', () => {
+        if (!assistantOn) {
+            pywebview.api.start_voice_assistant().then(() => {
+                assistantOn = true;
+                btn.textContent = '⏹️ disable the voice assistant';
+                btn.style.backgroundColor = '#f44336'; // красный
+            });
+        } else {
+            pywebview.api.stop_voice_assistant().then(() => {
+                assistantOn = false;
+                btn.textContent = '🎤 turn on the voice assistant';
+                btn.style.backgroundColor = '#4CAF50'; // зелёный
+            });
+        }
+    });
 </script>
 </body>
 </html>
