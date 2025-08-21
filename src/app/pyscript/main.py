@@ -7,12 +7,12 @@ import tempfile
 import pygame
 import speech_recognition as sr
 import edge_tts
+import db
 
-# Папка проекта (src/app)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# HTML файл карты
-MAP_HTML = os.path.join(BASE_DIR, 'webscript', 'map.html')
+
+MAP_HTML = os.path.join(BASE_DIR, 'webscript', 'auth.html')
 
 window = None
 assistant_thread = None
@@ -42,6 +42,17 @@ class Api:
         print("Останавливаем голосового помощника")
         assistant_stop_event.set()
         assistant_running = False
+
+    def __init__(self):
+        db.init_db()  # создаем таблицу при запуске
+
+    def register(self, username, email, password):
+        print(f"[API] 📥 register({username}, {email}, {password})")
+        return db.register_user(username, email, password)
+
+    def login(self, email, password):
+        print(f"[API] 📥 login({email}, {password})")
+        return db.login_user(email, password)
 
 
 async def speak_async(text):
@@ -112,20 +123,17 @@ def send_voice_command_to_map(command: str):
 def process_map_command(command: str):
     command = command.lower()
 
-    # Включение зон
     if any(phrase in command for phrase in ["покажи зоны", "показать зоны", "отобрази зоны", "включи зоны",
                                             "покажи зона"]):
         send_voice_command_to_map('{"action": "zones", "state": "show"}')
         speak("Включаю отображение зон доставки")
         return True
 
-    # Скрытие зон
     if any(phrase in command for phrase in ["скрой зоны", "убери зоны", "выключи зоны", "спрячь зоны"]):
         send_voice_command_to_map('{"action": "zones", "state": "hide"}')
         speak("Выключаю отображение зон доставки")
         return True
 
-    # Построение маршрута
     if any(phrase in command for phrase in ["построй маршрут", "построи маршрут", "постройте маршрут"]):
         addr = command
 
@@ -135,7 +143,6 @@ def process_map_command(command: str):
         elif "на машине" in addr or "на авто" in addr or "авто" in addr:
             routing_mode = "auto"
 
-        # Чистим адрес
         addr = (addr
                 .replace("построй маршрут", "")
                 .replace("построи маршрут", "")
@@ -152,7 +159,6 @@ def process_map_command(command: str):
             speak("Не расслышал адрес для маршрута. Повторите, пожалуйста.")
             return True
 
-        # Отправляем JSON в JS
         js_command = {
             "action": "route",
             "address": addr,
@@ -160,7 +166,6 @@ def process_map_command(command: str):
         }
         send_voice_command_to_map(str(js_command).replace("'", '"'))
 
-        # "Построить маршрут"
         js_code = f"""
             let input = document.querySelector('input[type="text"], input');
             if(input) input.value = '{addr}';
@@ -174,7 +179,6 @@ def process_map_command(command: str):
         speak(f"Строю маршрут до {addr} {'пешком' if routing_mode == 'pedestrian' else 'на машине'}")
         return True
 
-    # Очистка маршрута
     if any(phrase in command for phrase in ["очисти маршрут", "убери маршрут", "сбрось маршрут"]):
         send_voice_command_to_map('{"action": "clearRoute"}')
         speak("Маршрут очищен")
@@ -210,10 +214,6 @@ def assistant_loop():
         elif "время" in phrase:
             now = time.strftime("%H:%M")
             speak(f"Сейчас {now}")
-        elif "выход" in phrase or "завершаем" in phrase:
-            speak("До свидания")
-            assistant_stop_event.set()
-            break
         else:
             speak("Команда не распознана. Повторите, пожалуйста.")
 

@@ -950,7 +950,7 @@
         data = null;
     }
 
-    // === Если прилетел JSON от Python ===
+    // Если прилетел JSON от Python
     if (data) {
         if (data.action === "zones") {
             showZonesAndMarkers();
@@ -976,7 +976,7 @@
         }
     }
 
-    // Если ничего не подошло
+    // в остальном случае
     showPopupMessage("Команда не распознана: " + command);
 };
 
