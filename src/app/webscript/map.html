@@ -139,6 +139,35 @@
         <div class="legend-color orange"></div>
         <span>Зона пересечения лавок</span>
     </div>
+    <div id="command-help-icon" style="position: fixed; top: 20px; right: 20px; cursor: pointer; z-index: 1500; font-size: 20px;">
+    📖
+    </div>
+    <!-- Панель памятки -->
+    <div id="command-help-panel" style="
+        position: fixed;
+        top: 60px;
+        right: 20px;
+        width: 260px;
+        max-height: 400px;
+        background: rgba(30,30,30,0.95);
+        color: #fff;
+        padding: 15px;
+        border-radius: 13px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+        overflow-y: auto;
+        transform: translateX(110%);
+        transition: transform 0.3s ease;
+        z-index: 999;
+        font-family: sans-serif;
+    ">
+        <h3 style="margin-top:0; font-size: 14px; text-align:center; font-weight: 650;">Команды Voice Assistant</h3>
+        <ul style="padding-left: 20px; line-height: 1.9; font-weight: 500;">
+            <li><b>Покажи зоны</b> — Отобразить зоны доставки</li>
+            <li><b>Скрой зоны</b> — Скрыть зоны доставки</li>
+            <li><b>Построй маршрут</b> — Построить маршрут до адреса</li>
+            <li><b>Очисти маршрут</b> — Удалить текущий маршрут</li>
+        </ul>
+    </div>
 </div>
 <script>
     ymaps.ready(init);
@@ -998,6 +1027,14 @@
                 btn.style.backgroundColor = '#4CAF50'; // зелёный
             });
         }
+    });
+    const icon = document.getElementById('command-help-icon');
+    const panel = document.getElementById('command-help-panel');
+    let isOpen = false;
+
+    icon.addEventListener('click', () => {
+        panel.style.transform = isOpen ? 'translateX(110%)' : 'translateX(0)';
+        isOpen = !isOpen;
     });
 </script>
 </body>

@@ -278,10 +278,36 @@
       justify-content: center;
       margin-bottom: 20px;
     }
+    /* Контейнер для сообщений */
+  #messageBox {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    padding: 10px 25px;
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s ease;
+  }
+
+  /* Цвета для успеха и ошибки */
+  #messageBox.success { background-color: #28a745; } /* зеленый */
+  #messageBox.error { background-color: #dc3545; }   /* красный */
+  #messageBox.info { background-color: #102770; }    /* синий */
 
   </style>
 </head>
 <body>
+  <div id="messageBox" style="display:none;">
+    <div class="message-content" id="messageContent"></div>
+  </div>
   <div class="section">
     <div class="container">
       <div class="row full-height justify-content-center">
@@ -343,6 +369,27 @@
   </div>
 
   <script>
+    function showMessage(message, type="info", duration=3000) {
+    const box = document.getElementById("messageBox");
+    const content = document.getElementById("messageContent");
+
+    content.textContent = message;
+    box.className = type; // success, error, info
+    box.style.display = "block";
+
+    // Анимация появления
+    setTimeout(() => {
+      box.style.opacity = 1;
+      box.style.pointerEvents = "auto";
+    }, 10);
+
+    // Скрыть через duration
+    setTimeout(() => {
+      box.style.opacity = 0;
+      box.style.pointerEvents = "none";
+      setTimeout(() => box.style.display = "none", 400);
+    }, duration);
+  }
     // Регистрация
     async function register() {
       const username = document.getElementById("signupName").value;
@@ -353,10 +400,10 @@
 
       let result = await window.pywebview.api.register(username, email, password);
       if (result) {
-        alert("✅ Регистрация успешна! Теперь войдите.");
+        showMessage("Регистрация успешна! Теперь войдите.", "success");
         document.getElementById("reg-log").checked = false; // переключаем на форму входа
       } else {
-        alert("⚠ Такой пользователь уже существует");
+        showMessage("Такой пользователь уже существует", "error");
       }
     }
 
@@ -369,9 +416,10 @@
 
       let result = await window.pywebview.api.login(email, password);
       if (result) {
+        showMessage("Вход успешен!", "success");
         window.location.href = "map.html"; // переход в приложение
       } else {
-        alert("❌ Неверный логин или пароль");
+        showMessage("Неверный логин или пароль", "error")
       }
     }
 
