@@ -114,6 +114,61 @@
             background-color: #FF450013;
             border: 1px solid #FF450080;
         }
+        .sidebar {
+          height: 100%;
+          width: 0;
+          position: fixed;
+          z-index: 1000;
+          top: 0;
+          left: 0;
+          background-color: #111;
+          overflow-x: hidden;
+          padding-top: 60px;
+        }
+
+        .sidebar a {
+          padding: 10px 20px;
+          text-decoration: none;
+          font-size: 16px;
+          font-family: 'Inter', sans-serif !important;
+          color: #ddd;
+          display: block;
+          transition: 0.2s;
+        }
+
+        .sidebar a:hover {
+          color: #fff;
+          background: #575757;
+        }
+
+        .sidebar .closebtn {
+          position: absolute;
+          top: 10px;
+          right: 0px;
+          font-size: 27px;
+          margin-left: 50px;
+          color: #fff;
+        }
+
+        .openbtn {
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          background-color: white;
+          color: #050505;
+          padding: 4px 6px;
+          border: none;
+          border-radius: 4px;
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 1500;
+          border: 1px solid rgba(0,0,0,0.3); /* лёгкая чёрная обводка */
+        }
+
+        .openbtn:hover {
+          background-color: #444;
+        }
     </style>
 </head>
 <body>
@@ -139,7 +194,7 @@
         <div class="legend-color orange"></div>
         <span>Зона пересечения лавок</span>
     </div>
-    <div id="command-help-icon" style="position: fixed; top: 20px; right: 20px; cursor: pointer; z-index: 1500; font-size: 20px;">
+    <div id="command-help-icon" style="position: fixed; top: 20px; right: 20px; cursor: pointer; z-index: 1500; font-size: 24px;">
     📖
     </div>
     <!-- Панель памятки -->
@@ -168,6 +223,14 @@
             <li><b>Очисти маршрут</b> — Удалить текущий маршрут</li>
         </ul>
     </div>
+    <div id="sidebar" class="sidebar">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeMenu()">&times;</a>
+      <a href="map.html">🛣️ Карта</a>
+      <a href="history.html">🚩 История маршрутов</a>
+      <a href="#">⚙️ Настройки</a>
+      <a href="#">❌ Выйти</a>
+    </div>
+    <span class="openbtn" onclick="openMenu()">☰ Меню</span>
 </div>
 <script>
     ymaps.ready(init);
@@ -1036,6 +1099,15 @@
         panel.style.transform = isOpen ? 'translateX(110%)' : 'translateX(0)';
         isOpen = !isOpen;
     });
+    function openMenu() {
+      document.getElementById("sidebar").style.width = "250px";
+      document.querySelector(".openbtn").style.display = "none"; // скрыть кнопку
+    }
+
+    function closeMenu() {
+      document.getElementById("sidebar").style.width = "0";
+      document.querySelector(".openbtn").style.display = "block"; // вернуть кнопку
+    }
 </script>
 </body>
 </html>
